@@ -1,7 +1,7 @@
 # hkg2arch - 0.1
 A simple script to generate PKGBUILDs for haskell packages. Language: Bash
 
-usage: hkg2arch [HKGNAME] [HKGVER] [options]
+usage: hkg2arch [HKGNAME] [HKGVER]
     
     examples:
     
