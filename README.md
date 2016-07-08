@@ -1,8 +1,12 @@
 # hkg2arch - 0.1
 A simple script to generate PKGBUILDs for haskell packages. Language: Bash
+
 usage: hkg2arch [HKGNAME] [HKGVER] [options]
+    
     examples:
+    
     - hkg2arch curl 1.3.8 [create PKGBUILD for curl-1.3.8]
+
 #Installation
 
 git clone https://github.com/christopherloen/hkg2arch.git
