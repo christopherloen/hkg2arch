@@ -1,0 +1,78 @@
+#!/bin/bash
+#BASE VARS
+hkgname="${1}"
+hkgver="${2}"
+RED='\033[1;31m'
+BLUE='\033[1;34m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+BASE='\033[0m'
+current="$(ls | grep -q "${hkgname}-${hkgver}")"
+# FUNCTIONS
+
+usage(){
+  echo -e "${GREEN}:: -> hkg2arch 0.1${BASE}"
+  cat <<EOF
+    usage: hkg2arch [HKGNAME] [HKGVER]
+    examples:
+    - hkg2arch curl 1.3.8 [create PKGBUILD for curl-1.3.8]
+EOF
+}
+
+make_PKGBUILD(){
+  install -d "${hkgname}-${hkgver}" && cd "${hkgname}-${hkgver}" && rm -rf *
+  echo "# Maintainer: Your Name <your@email.com>" >> PKGBUILD
+  echo "hkgname=${hkgname}" >> PKGBUILD
+  echo "pkgname='haskell-${hkgname}'" >> PKGBUILD
+  echo "pkgrel=1" >> PKGBUILD
+  echo "pkgver="${hkgver}"" >> PKGBUILD
+  desc="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(Synopsis:\)/\1/p' | sed -n -e 's/^.*  //p')"
+  echo "pkgdesc='${desc}'" >> PKGBUILD
+  echo "arch=('any')" >> PKGBUILD
+  url="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(Homepage:\)/\1/p' | sed -n -e 's/^.*  //p')"
+  not="[ Not specified ]"
+  if [ "${url}" = "${not}" ]
+    then
+      echo "url='None'" >> PKGBUILD
+  else
+    echo "url='${url}'" >> PKGBUILD
+  fi
+  license="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(License:\)/\1/p' | sed -n -e 's/^.*  //p')"
+  echo "license=('${license}')" >> PKGBUILD
+  deps="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(Dependencies:\)/\1/p' | sed -n -e 's/^.*  //p' | sed 's/-any//g' | sed 's/,//g' | sed 's/base//g' | sed 's/&&//g' | sed 's/>[^ ]*//g' | sed 's/<[^ ]*//g' | sed 's/[^ ]* */haskell-&/g' | cut -d' ' -f2- | tr -s " ")"
+  echo "deps=(ghc${deps})" >> PKGBUILD
+  echo "options=('strip')" >> PKGBUILD
+  source="https://hackage.haskell.org/package/${hkgname}-${hkgver}/${hkgname}-${hkgver}.tar.gz"
+  echo "source=(${source})" >> PKGBUILD
+  wget ${source} 2>/dev/null && sha256sum="$(sha256sum ${hkgname}-${hkgver}.tar.gz | cut -f1 -d" ")" && echo "sha256sums=("${sha256sum}")" >> PKGBUILD
+  echo "build(){" >> PKGBUILD
+  echo "  cd \${srcdir}/\${hkgname}-\${pkgver}" >> PKGBUILD
+  echo "  runhaskell Setup configure -O \${PKGBUILD_HASKELL_ENABLE_PROFILING:+-p } --enable-split-objs --enable-shared --prefix=/usr --docdir=/usr/share/doc/\${pkgname} --libsubdir='\$compiler'/site-local/'\$pkgid'" >> PKGBUILD
+  cat >> PKGBUILD <<EOF
+    runhaskell Setup build
+    runhaskell Setup haddock
+    runhaskell Setup register   --gen-script
+    runhaskell Setup unregister --gen-script
+    sed -i -r -e "s|ghc-pkg.*unregister[^ ]* |&'--force' |" unregister.sh
+  }
+EOF
+   echo "package() {" >> PKGBUILD
+   echo "  cd \${srcdir}/\${hkgname}-\${pkgver}" >> PKGBUILD
+   echo "  install -D -m744 register.sh   \${pkgdir}/usr/share/haskell/\${pkgname}/register.sh" >> PKGBUILD
+   echo "  install    -m744 unregister.sh \${pkgdir}/usr/share/haskell/\${pkgname}/unregister.sh" >> PKGBUILD
+   echo "  install -d -m755 \${pkgdir}/usr/share/doc/ghc/html/libraries" >> PKGBUILD
+   echo "  ln -s /usr/share/doc/\${pkgname}/html \${pkgdir}/usr/share/doc/ghc/html/libraries/\${hkgname}" >> PKGBUILD
+   echo "  runhaskell Setup copy --destdir=\${pkgdir}" >> PKGBUILD
+   echo "  install -D -m644 LICENSE \${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE" >> PKGBUILD
+   echo "  rm -f \${pkgdir}/usr/share/doc/\${pkgname}/LICENSE" >> PKGBUILD
+   echo "}" >> PKGBUILD
+   echo -e "${GREEN}Ready, enter ${hkgname}-${hkgver} folder to see PKGBUILD${BASE}"
+}
+
+# OPS
+if [ "${hkgname}" = "" -o "${hkgver}" = "" -o "${hkgname}" = "-h" -o "${hkgname}" = "--help" ]
+    then
+      usage && exit
+else
+      make_PKGBUILD
+fi
