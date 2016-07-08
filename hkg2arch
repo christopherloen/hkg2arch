@@ -11,7 +11,7 @@ current="$(ls | grep -q "${hkgname}-${hkgver}")"
 # FUNCTIONS
 
 usage(){
-  echo -e "${GREEN}:: -> hkg2arch 0.1${BASE}"
+  echo -e "${GREEN}:: -> hkg2arch 0.5${BASE}"
   cat <<EOF
     usage: hkg2arch [HKGNAME] [HKGVER]
     examples:
@@ -40,7 +40,7 @@ make_PKGBUILD(){
   fi
   license="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(License:\)/\1/p' | sed -n -e 's/^.*  //p')"
   echo "license=(${license})" >> PKGBUILD
-  deps="$(cabal info ${hkgname}-${hkgver} | sed -n -e 's/^.*\(Dependencies:\)/\1/p' | sed -n -e 's/^.*  //p' | sed 's/-any//g' | sed 's/,//g' | sed 's/base//g' | sed 's/&&//g' | sed 's/>[^ ]*//g' | sed 's/<[^ ]*//g' | sed 's/[^ ]* */haskell-&/g' | cut -d' ' -f2- | sed -e s/haskell-${hkgname}//g | tr -s " ")"
+  deps="$(grep -E "(^|\s)${hkgname} ->($|\s)" /usr/share/hkg2arch/deps.txt | xargs | sed "s/${hkgname} ->//g" | sed 's/[^ ]* */haskell-&/g' | sed -e s/haskell-${hkgname}//g | sed -e s/haskell-//g | tr -s " " | sed 's/[^ ]* */haskell-&/g' | cut -d' ' -f2- | tr -s " ")"
   echo "depends=(ghc${deps})" >> PKGBUILD
   echo "options=(strip)" >> PKGBUILD
   source="https://hackage.haskell.org/package/${hkgname}-${hkgver}/${hkgname}-${hkgver}.tar.gz"
