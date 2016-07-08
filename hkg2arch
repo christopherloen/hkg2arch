@@ -2,10 +2,10 @@
 #BASE VARS
 hkgname="${1}"
 hkgver="${2}"
-RED='\033[1;31m'
-BLUE='\033[1;34m'
+#RED='\033[1;31m'
+#BLUE='\033[1;34m'
 GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
+#YELLOW='\033[1;33m'
 BASE='\033[0m'
 current="$(ls | grep -q "${hkgname}-${hkgver}")"
 # FUNCTIONS
