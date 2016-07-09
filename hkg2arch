@@ -41,7 +41,7 @@ make_PKGBUILD(){
   license="$(cabal info "${hkgname}-${hkgver}" | sed -n -e 's/^.*\(License:\)/\1/p' | sed -n -e 's/^.*  //p')"
   echo "license=(${license})" >> PKGBUILD
   deps="$(grep -E "(^|\s)${hkgname} ->($|\s)" /usr/share/hkg2arch/deps.txt | xargs | sed "s/${hkgname} ->//g" | sed 's/[^ ]* */haskell-&/g' | sed -e s/haskell-${hkgname}//g | sed -e s/haskell-//g | tr -s " " | sed 's/[^ ]* */haskell-&/g' | cut -d' ' -f2- | tr -s " ")"
-  echo "depends=(ghc${deps})" >> PKGBUILD
+  echo "depends=(ghc ${deps})" >> PKGBUILD
   echo "options=(strip)" >> PKGBUILD
   source="https://hackage.haskell.org/package/${hkgname}-${hkgver}/${hkgname}-${hkgver}.tar.gz"
   echo "source=(${source})" >> PKGBUILD
